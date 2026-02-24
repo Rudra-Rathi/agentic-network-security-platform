@@ -1,26 +1,25 @@
 {
   "scan_metadata": {
-    "scan_id": "",
-    "target": "",
+    "scan_id": "240e43c7-2530-4b6d-8801-b7215a5ee2cb",
+    "target": "10.0.33.26",
     "target_type": "",
     "scan_mode": "",
-    "initiated_by": "",
-    "timestamp": ""
+    "initiated_by": "user",
+    "timestamp": "2026-02-24T11:21:34.765504Z"
   },
-
   "network_context": {
-    "scanner_ip": "",
-    "interface": "",
+    "scanner_ip": "172.17.0.1",
+    "interface": "unknown",
     "local_subnet": "",
-    "network_type": ""
+    "network_type": "unknown"
   },
-
   "scan_strategy": {
-    "discovery_methods": [],
+    "discovery_methods": [
+      "icmp_ping"
+    ],
     "ports_scanned": [],
     "tools_used": {}
   },
-
   "scan_limitations": {
     "icmp_blocked": false,
     "tcp_filtered": false,
@@ -29,11 +28,18 @@
     "confidence_level": "",
     "notes": ""
   },
-
-  "hosts": [],
-
+  "hosts": [
+    {
+      "ip": "10.0.33.26",
+      "status": "up",
+      "discovery_method": [
+        "icmp_ping"
+      ],
+      "open_ports": []
+    }
+  ],
   "summary": {
-    "total_hosts_discovered": 0,
+    "total_hosts_discovered": 1,
     "hosts_with_open_ports": 0,
     "publicly_exposed_services": [],
     "overall_recon_confidence": ""
