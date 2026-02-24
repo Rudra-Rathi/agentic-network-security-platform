@@ -1,11 +1,11 @@
 {
   "scan_metadata": {
-    "scan_id": "24e4d136-5378-49aa-b07a-4f001b9093d8",
-    "target": "10.0.33.26",
+    "scan_id": "0049d4b9-2b70-4288-8209-a77db2d3a987",
+    "target": "10.0.33.228",
     "target_type": "",
     "scan_mode": "",
     "initiated_by": "user",
-    "timestamp": "2026-02-24T11:44:41.783860Z"
+    "timestamp": "2026-02-24T11:50:07.418799Z"
   },
   "network_context": {
     "scanner_ip": "172.17.0.1",
@@ -30,35 +30,23 @@
   },
   "hosts": [
     {
-      "ip": "10.0.33.26",
+      "ip": "10.0.33.228",
       "status": "up",
       "discovery_method": [
         "icmp_ping"
       ],
       "open_ports": [
         {
-          "port": 135,
+          "port": 80,
           "protocol": "tcp",
-          "service": "tcpwrapped",
-          "version": "unknown"
-        },
-        {
-          "port": 139,
-          "protocol": "tcp",
-          "service": "tcpwrapped",
-          "version": "unknown"
-        },
-        {
-          "port": 445,
-          "protocol": "tcp",
-          "service": "tcpwrapped",
-          "version": "unknown"
+          "service": "http",
+          "version": "Microsoft IIS httpd 10.0"
         },
         {
           "port": 3306,
           "protocol": "tcp",
-          "service": "tcpwrapped",
-          "version": "unknown"
+          "service": "mysql",
+          "version": "MariaDB 10.3.23 or earlier (unauthorized)"
         }
       ]
     }

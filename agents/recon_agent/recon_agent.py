@@ -10,8 +10,11 @@ import json
 import uuid
 import subprocess
 
-from tools.nmap_discovery import icmp_discovery, tcp_discovery
-
+from tools.nmap_discovery import (
+    icmp_discovery,
+    tcp_discovery,
+    port_service_scan
+)
 # -----------------------------
 # Load JSON template
 # -----------------------------
@@ -99,10 +102,15 @@ def save_recon_artifact(recon_data):
 # -----------------------------
 # Main Recon Flow
 # -----------------------------
+# -----------------------------
+# Main Recon Flow
+# -----------------------------
 def run_recon(target):
 
     recon_data = load_recon_template()
     initialize_metadata(recon_data, target)
+
+    # Network context
     recon_data["network_context"].update(get_network_context())
 
     # --------------------------
@@ -117,7 +125,7 @@ def run_recon(target):
     recon_data["scan_limitations"]["icmp_blocked"] = icmp_blocked
 
     # --------------------------
-    # TCP Fallback (IMPORTANT)
+    # TCP Fallback (If ICMP blocked)
     # --------------------------
     if icmp_blocked:
         tcp_output = tcp_discovery(target)
@@ -129,7 +137,9 @@ def run_recon(target):
         hosts.extend(tcp_hosts)
         recon_data["scan_strategy"]["discovery_methods"].append("tcp_syn")
 
-    # Remove duplicates (important)
+    # --------------------------
+    # Remove Duplicate Hosts
+    # --------------------------
     unique_hosts = {h["ip"]: h for h in hosts}.values()
     hosts = list(unique_hosts)
 
@@ -146,4 +156,64 @@ def run_recon(target):
         recon_data["scan_limitations"]["confidence_level"] = "high"
         recon_data["scan_limitations"]["notes"] = "ICMP discovery successful"
 
+    # --------------------------
+    # Port & Service Detection
+    # --------------------------
+    service_output = port_service_scan(target)
+    port_data = parse_ports_services(service_output)
+
+    for host in hosts:
+        ip = host["ip"]
+
+        if ip in port_data:
+            host["open_ports"] = port_data[ip]
+        else:
+            host["open_ports"] = []
+
+    # --------------------------
+    # Summary Metrics (IMPORTANT)
+    # --------------------------
+    hosts_with_ports = sum(
+        1 for h in hosts if len(h.get("open_ports", [])) > 0
+    )
+
+    recon_data["summary"]["hosts_with_open_ports"] = hosts_with_ports
+
+    # Optional: overall confidence mirror
+    recon_data["summary"]["overall_recon_confidence"] = \
+        recon_data["scan_limitations"]["confidence_level"]
+
+    # --------------------------
+    # Save Artifact
+    # --------------------------
     save_recon_artifact(recon_data)
+
+def parse_ports_services(nmap_output):
+    host_data = {}
+
+    current_ip = None
+
+    for line in nmap_output.splitlines():
+
+        if "Nmap scan report for" in line:
+            current_ip = line.split()[-1]
+            host_data[current_ip] = []
+
+        if "/tcp" in line and "open" in line:
+            parts = line.split()
+
+            port = int(parts[0].split("/")[0])
+            service = parts[2]
+
+            version = "unknown"
+            if len(parts) > 3:
+                version = " ".join(parts[3:])
+
+            host_data[current_ip].append({
+                "port": port,
+                "protocol": "tcp",
+                "service": service,
+                "version": version
+            })
+
+    return host_data
