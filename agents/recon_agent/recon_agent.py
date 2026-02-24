@@ -10,8 +10,7 @@ import json
 import uuid
 import subprocess
 
-from tools.nmap_discovery import icmp_discovery
-
+from tools.nmap_discovery import icmp_discovery, tcp_discovery
 
 # -----------------------------
 # Load JSON template
@@ -101,12 +100,14 @@ def save_recon_artifact(recon_data):
 # Main Recon Flow
 # -----------------------------
 def run_recon(target):
+
     recon_data = load_recon_template()
-
     initialize_metadata(recon_data, target)
-
     recon_data["network_context"].update(get_network_context())
 
+    # --------------------------
+    # ICMP Discovery
+    # --------------------------
     raw_output = icmp_discovery(target)
     hosts = parse_nmap_hosts(raw_output)
 
@@ -115,7 +116,34 @@ def run_recon(target):
     recon_data["scan_strategy"]["discovery_methods"].append("icmp_ping")
     recon_data["scan_limitations"]["icmp_blocked"] = icmp_blocked
 
+    # --------------------------
+    # TCP Fallback (IMPORTANT)
+    # --------------------------
+    if icmp_blocked:
+        tcp_output = tcp_discovery(target)
+        tcp_hosts = parse_nmap_hosts(tcp_output)
+
+        for host in tcp_hosts:
+            host["discovery_method"] = ["tcp_syn"]
+
+        hosts.extend(tcp_hosts)
+        recon_data["scan_strategy"]["discovery_methods"].append("tcp_syn")
+
+    # Remove duplicates (important)
+    unique_hosts = {h["ip"]: h for h in hosts}.values()
+    hosts = list(unique_hosts)
+
     recon_data["hosts"] = hosts
     recon_data["summary"]["total_hosts_discovered"] = len(hosts)
+
+    # --------------------------
+    # Confidence Scoring
+    # --------------------------
+    if icmp_blocked:
+        recon_data["scan_limitations"]["confidence_level"] = "medium"
+        recon_data["scan_limitations"]["notes"] = "ICMP blocked, TCP fallback used"
+    else:
+        recon_data["scan_limitations"]["confidence_level"] = "high"
+        recon_data["scan_limitations"]["notes"] = "ICMP discovery successful"
 
     save_recon_artifact(recon_data)
