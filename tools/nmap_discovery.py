@@ -1,5 +1,5 @@
 import subprocess
-
+#this is done for nmap scan
 
 def icmp_discovery(target):
     cmd = ["nmap", "-sn", target]
